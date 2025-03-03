@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Download, FileText, RotateCcw } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,7 @@ import Link from "next/link";
 import remarkGfm from "remark-gfm";
 import { ModeToggle } from "@/components/theme-toggle";
 
-export default function MarkdownEditor() {
-  const [markdown, setMarkdown] = useState<string>(`# Welcome to Markdown Editor
+const defaultContent = `# Welcome to Markdown Editor
 
 Start typing in the editor on the left and see the preview on the right.
 
@@ -22,6 +21,7 @@ Start typing in the editor on the left and see the preview on the right.
 - **Live Preview**: See your changes instantly
 - **Export as Markdown**: Save your raw markdown text
 - **Modern Design**: Clean and intuitive interface
+- **Auto-save**: Your content is automatically saved in your browser
 
 ## Formatting Examples
 
@@ -49,9 +49,23 @@ function hello() {
 ### Links
 
 [Visit GitHub](https://github.com/lukeorriss)
-`);
+`;
+
+export default function MarkdownEditor() {
+  const [markdown, setMarkdown] = useState<string>("");
+  const [isClient, setIsClient] = useState(false);
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    setIsClient(true);
+    const saved = localStorage.getItem("markdown-content");
+    if (saved) {
+      setMarkdown(saved);
+    } else {
+      setMarkdown(defaultContent);
+    }
+  }, []);
 
   const handleExportPDF = async () => {
     try {
@@ -114,6 +128,12 @@ function hello() {
   const handleResetEditor = () => {
     setMarkdown(``);
   };
+
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem("markdown-content", markdown);
+    }
+  }, [markdown, isClient]);
 
   return (
     <div className="flex flex-col h-screen bg-background">
